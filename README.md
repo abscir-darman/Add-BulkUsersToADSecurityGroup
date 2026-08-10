@@ -9,11 +9,8 @@ Add-BulkUsersToADSecurityGroup.ps1
 Prepared by:
 Abscir Darman
 
-======================================================================
-1. PURPOSE
-======================================================================
 
-This PowerShell script automates the process of adding multiple Active
+PURPOSE: This PowerShell script automates the process of adding multiple Active
 Directory users to one security group during a single execution.
 
 The script is useful when several new employees require the same access. For
@@ -34,11 +31,8 @@ one script execution. Each user is still validated and recorded individually,
 so one invalid username does not prevent the remaining valid users from being
 processed.
 
-======================================================================
-2. EXAMPLE BUSINESS SCENARIO
-======================================================================
 
-Five new developers require access to a Citrix VDI delivery group.
+EXAMPLE : Five new developers require access to a Citrix VDI delivery group.
 
 Target Active Directory security group:
 
@@ -55,10 +49,8 @@ Approved usernames:
 The administrator creates Usernames.txt, enters one username per line, tests
 the script with -WhatIf, and then performs the approved production run.
 
-======================================================================
-3. WHAT THE SCRIPT DOES
-======================================================================
-
+ 
+ WHAT THE SCRIPT DOES
 During execution, the script performs the following operations:
 
 1. Loads the Active Directory PowerShell module.
@@ -75,10 +67,8 @@ During execution, the script performs the following operations:
 12. Records an individual result for every username.
 13. Exports the results to a timestamped CSV audit log.
 
-======================================================================
-4. CITRIX CVAD ACCESS MODEL
-======================================================================
-
+ 
+CITRIX CVAD ACCESS MODEL
 The script modifies Active Directory group membership. It does not directly
 create or modify Citrix machine catalogs, delivery groups, virtual desktops,
 or published applications.
@@ -90,10 +80,8 @@ After membership is added, users may need to sign out of Windows and Citrix
 Workspace and then sign back in. This refreshes their Windows security token
 so that it includes the new group membership.
 
-======================================================================
-5. PREREQUISITES
-======================================================================
-
+ 
+ PREREQUISITES
 - Run the script from a domain-joined Windows administrative workstation or
   server.
 - Install the Active Directory PowerShell module through RSAT.
@@ -106,11 +94,8 @@ so that it includes the new group membership.
 The administrator does not need Domain Admin rights when the appropriate group
 management permission has been delegated.
 
-======================================================================
-6. RECOMMENDED FOLDER STRUCTURE
-======================================================================
-
-Create the following folder structure:
+ 
+STRUCTURE: Create the following folder structure:
 
     C:\Scripts\
         Add-BulkUsersToADSecurityGroup.ps1
@@ -119,11 +104,8 @@ Create the following folder structure:
 
 The script creates the Logs folder automatically if it does not already exist.
 
-======================================================================
-7. USERNAME FILE FORMAT
-======================================================================
-
-Create the following file in Notepad:
+ 
+ FILE FORMAT: Create the following file in Notepad:
 
     C:\Scripts\Usernames.txt
 
@@ -144,13 +126,8 @@ Important formatting requirements:
 - Duplicate usernames are automatically removed.
 - Use the users' normal domain logon names, not their display names.
 
-======================================================================
-8. SCRIPT PARAMETERS
-======================================================================
-
-UserListPath
-    Specifies the location of the Notepad username file.
-
+ 
+ SCRIPT PARAMETERS :  UserListPath Specifies the location of the Notepad username file.
     Default:
     C:\Scripts\Usernames.txt
 
@@ -167,10 +144,8 @@ LogFolder
     Default:
     C:\Scripts\Logs
 
-======================================================================
-9. SAFE TEST COMMAND
-======================================================================
-
+ 
+ SAFE TEST COMMAND :
 Open Windows PowerShell as the delegated administrator and run:
 
     .\Add-BulkUsersToADSecurityGroup.ps1 `
@@ -182,117 +157,6 @@ The -WhatIf parameter simulates the operation. It displays which users would
 be added but does not modify Active Directory.
 
 Review all WhatIf, AlreadyMember, Disabled, and Failed results before continuing.
-
-======================================================================
-10. PRODUCTION COMMAND
-======================================================================
-
-After reviewing the -WhatIf results and receiving change approval, run:
-
-    .\Add-BulkUsersToADSecurityGroup.ps1 `
-        -UserListPath "C:\Scripts\Usernames.txt" `
-        -GroupName "Dev-VDI-Delivery"
-
-The script will add eligible users and save a timestamped results file under:
-
-    C:\Scripts\Logs
-
-Example log filename:
-
-    Dev-VDI-Delivery-Membership-20260810-153000.csv
-
-======================================================================
-11. RESULT STATUS MEANINGS
-======================================================================
-
-Added
-    The user was successfully added to the security group.
-
-AlreadyMember
-    The user is already a direct member. No change was required.
-
-Disabled
-    The user account exists but is disabled. No membership was added.
-
-WhatIf
-    The operation was simulated. Active Directory was not modified.
-
-Failed
-    The username could not be processed. Possible causes include an invalid
-    username, insufficient permissions, domain-controller connectivity, or an
-    Active Directory error.
-
-======================================================================
-12. VERIFY GROUP MEMBERSHIP
-======================================================================
-
-To display the direct members of Dev-VDI-Delivery, run:
-
-    Get-ADGroupMember -Identity "Dev-VDI-Delivery" |
-        Sort-Object Name |
-        Select-Object Name, SamAccountName, ObjectClass
-
-To verify one user, run:
-
-    Get-ADUser -Identity "jdoe" -Properties MemberOf |
-        Select-Object -ExpandProperty MemberOf
-
-======================================================================
-13. VIEW THE BUILT-IN SCRIPT HELP
-======================================================================
-
-The PowerShell script contains comment-based help. Use these commands:
-
-Full documentation:
-
-    Get-Help .\Add-BulkUsersToADSecurityGroup.ps1 -Full
-
-Examples only:
-
-    Get-Help .\Add-BulkUsersToADSecurityGroup.ps1 -Examples
-
-GroupName parameter help:
-
-    Get-Help .\Add-BulkUsersToADSecurityGroup.ps1 -Parameter GroupName
-
-======================================================================
-14. SECURITY AND CHANGE-CONTROL GUIDANCE
-======================================================================
-
-- Use delegated group-management permissions rather than Domain Admin.
-- Verify the target group name before running the production command.
-- Confirm that every username has an approved business request.
-- Retain the approved request, Usernames.txt, and results CSV as evidence.
-- Protect the username file and audit log according to company policy.
-- Do not use the onboarding script as an unapproved offboarding method.
-- Review failed accounts individually before rerunning the script.
-
-======================================================================
-15. ROLLBACK
-======================================================================
-
-If an account was added incorrectly, obtain approval and remove it with:
-
-    Remove-ADGroupMember `
-        -Identity "Dev-VDI-Delivery" `
-        -Members "jdoe" `
-        -Confirm:$false
-
-Record all rollback actions in the change or access-request ticket.
-
-======================================================================
-16. OPERATIONAL SUMMARY
-======================================================================
-
-The script converts a repetitive Active Directory task into a controlled bulk
-workflow:
-
-    Prepare approved username list
-              -> Run -WhatIf
-              -> Review validation results
-              -> Run production command
-              -> Review CSV audit log
-              -> Verify Citrix access
 
 The main benefit is not only speed. The script also provides consistent
 validation, prevents duplicate work, identifies disabled or missing accounts,
